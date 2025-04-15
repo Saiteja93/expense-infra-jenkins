@@ -22,13 +22,21 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Apply or destroy') {
           
             steps {
+                withAWS(region: 'us-east-1', credentials: 'aws-cred') {
+                    sh """
+                        cd 10-vpc
+                        if [ ${params.Action} == 'apply' ]
+                        then 
+                          terraform apply -auto-approve
+                        elif [${params.Action} == 'destroy' ]
+                           terraform destry -auto-approve
+                        fi
 
-                    sh 'echo This is a deploy'
-                    //error 'pipeline failed'
-                    
+                        
+                    """
 
             }
         }
