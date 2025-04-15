@@ -1,0 +1,49 @@
+pipeline {
+    agent {
+        label 'agent -1'
+    }
+    options{
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+    parameters{
+        choice(name:'ACTION', choices: ['apply','destroy'], description: 'select Action')
+    }
+     stages {
+        stage('Init and Plan') {
+            steps {
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                    sh """
+                        cd 00-vpc
+                        terraform init -reconfigure
+                        terraform plan -out=tfplan
+                    """
+                }
+            }
+        }
+        stage('Deploy') {
+          
+            steps {
+
+                    sh 'echo This is a deploy'
+                    //error 'pipeline failed'
+                    
+
+            }
+        }
+    }
+    
+
+    post {
+        always {
+            echo " this section runs always"
+        }
+        success {
+            echo "this section run when pipeline sucecess"
+        }
+        failure {
+            echo "this section runs when pipeline failed"
+        }
+    }
+}
+        
