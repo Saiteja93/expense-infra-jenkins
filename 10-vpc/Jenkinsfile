@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'AGENT-1'
+        label 'agent -1'
     }
     options{
         timeout(time: 30, unit: 'MINUTES')
@@ -17,7 +17,7 @@ pipeline {
     stages {
         stage('Init and Plan') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                withAWS(region: 'us-east-1', credentials: 'aws-cred') {
                     sh """
                         cd 00-vpc
                         terraform init -reconfigure
@@ -26,12 +26,12 @@ pipeline {
                 }
             }
         }
-
+/* 
         stage('Apply or Destroy') {
-            input {
+            /* input {
                 message "Should we continue to ${params.ACTION}"
                 ok "Yes, we should."
-            }
+            } */
             steps {
                 withAWS(region: 'us-east-1', credentials: 'aws-cred') {
                     sh """
@@ -47,9 +47,8 @@ pipeline {
                 }
             }
         }
-  
     
-    
+     */
 
  post {
         always{
