@@ -1,5 +1,6 @@
+
 pipeline {
-    agent {
+      agent {
         label 'agent -1'
     }
     options{
@@ -7,32 +8,28 @@ pipeline {
         disableConcurrentBuilds()
         // ansiColor('xterm')
     }
-    // environment {
-    //     DEBUG = 'true'
-    // }
-
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select Action')
     }
+
     stages {
         stage('Init and Plan') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-cred') {
+             withAWS(region: 'us-east-1', credentials: 'aws-cred') {
                     sh """
                         cd 00-vpc
                         terraform init -reconfigure
                         terraform plan -out=tfplan
                     """
-                }
             }
         }
+    }
+    
 
-
- post {
-        always{
-            echo "This sections runs always"
-            deleteDir()
-        }
+    post {
+        always {
+            echo 'This runs after everything'
+         }
         success{
             echo "This section run when pipeline success"
         }
@@ -41,5 +38,5 @@ pipeline {
         }
     }
 }
-}
+
         
