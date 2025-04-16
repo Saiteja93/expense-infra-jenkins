@@ -1,57 +1,86 @@
 pipeline {
     agent {
-        label 'agent -1'
+        label 'AGENT-1'
     }
     options{
         timeout(time: 30, unit: 'MINUTES')
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
-    parameters{
-        choice(name:'ACTION', choices: ['apply','destroy'], description: 'select Action')
+    // environment {
+    //     DEBUG = 'true'
+    // }
+
+    parameters {
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select Action')
     }
-     stages {
+    stages {
         stage('Init and Plan') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-cred') {
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
                     sh """
-                        cd 10-vpc
+                        cd 00-vpc
                         terraform init -reconfigure
                         terraform plan -out=tfplan
                     """
                 }
             }
         }
+
+        stage('Apply or Destroy') {
+            input {
+                message "Should we continue to ${params.ACTION}"
+                ok "Yes, we should."
+            }
+            steps {
+                withAWS(region: 'us-east-1', credentials: 'aws-cred') {
+                    sh """
+                        cd 00-vpc
+                        if [ ${params.ACTION} == 'apply' ]
+                        then
+                            terraform apply -auto-approve tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                        then
+                            terraform destroy -auto-approve
+                        fi
+                    """
+                }
+            }
+        }
         stage('Apply or destroy') {
+            input {
+                message "Should we continue to ${params.ACTION}"
+                ok "Yes, we should."
           
             steps {
                 withAWS(region: 'us-east-1', credentials: 'aws-cred') {
                     sh """
-                        cd 10-vpc
-                        if [ ${params.Action} == 'apply' ]
-                        then 
-                          terraform apply -auto-approve
-                        elif [${params.Action} == 'destroy' ]
-                           terraform destry -auto-approve
+                        cd 00-vpc
+                        if [ ${params.ACTION} == 'apply' ]
+                        then
+                            terraform apply -auto-approve tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                        then
+                            terraform destroy -auto-approve
                         fi
-
-                        
                     """
-
+                }
             }
         }
     }
     
+    
 
-    post {
-        always {
-            echo " this section runs always"
+ post {
+        always{
+            echo "This sections runs always"
+            deleteDir()
         }
-        success {
-            echo "this section run when pipeline sucecess"
+        success{
+            echo "This section run when pipeline success"
         }
-        failure {
-            echo "this section runs when pipeline failed"
+        failure{
+            echo "This section run when pipeline failure"
         }
     }
 }
